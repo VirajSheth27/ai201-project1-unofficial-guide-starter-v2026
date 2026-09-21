@@ -57,39 +57,35 @@ in at least 4 of 5 tries.
 
 ## 4. Something about your chunks
 
-<!-- YOU WRITE THIS ONE.
-
-     How would you know if your chunks were the right size? Name something
-     countable or observable.
-
-     Examples of the right shape — don't copy these, they should come from
-     what you actually saw in Milestone 3:
-       - "At least 4 of 5 sampled chunks read as a complete thought, with no
-          sentence cut in half at either end."
-       - "No chunk is shorter than 200 characters, since anything below that
-          in my corpus turned out to be a heading with no content under it." -->
-
-
+For at least 8 of 10 chunks I sample at random, someone could answer a
+question using only that chunk's text, without needing the document before
+or after it.
 
 **Why this target:**
 
+<!-- At least one doc I read (the Innisfree laundry doc) refers to "the building"
+rather than naming it, relying on the filename for context — a chunk without
+that filename attached could fail this check on its own. I'm leaving room
+for a couple of docs like that rather than requiring a perfect 10/10. -->
 
 
 ---
 
 ## 5. Your choice
 
-<!-- YOU WRITE THIS ONE TOO.
-
-     Pick something you actually care about getting right. It could be about
-     speed, about refusals, about a particular kind of question your corpus
-     handles badly, about source attribution being correct rather than merely
-     present — anything, as long as it names a number or an observable
-     outcome. -->
-
-
+For prompts querying a specific residence hall, the answer correctly
+attributes its source to the document corresponding to that specific
+building rather than a cross-pollinated document from another hall with
+near-identical text, in at least 8 of 10 tries.
 
 **Why this target:**
+
+<!--Shared phrasing across documents — e.g. the sentence "eight washers and six
+dryers for the building, which is the wrong ratio" appears across Innisfree
+Hall, Morrow House, Old Brewhouse, and Tamsin Court — creates strong vector
+similarity collisions, making occasional cross-building misattribution a
+predictable failure mode. The system should pass most, but not necessarily
+all, of these. -->
 
 
 
