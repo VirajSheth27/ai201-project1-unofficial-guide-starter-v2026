@@ -68,6 +68,10 @@ rather than naming it, relying on the filename for context — a chunk without
 that filename attached could fail this check on its own. I'm leaving room
 for a couple of docs like that rather than requiring a perfect 10/10. -->
 
+**Revised after further sampling:** For at least 10 of 10 chunks I sample at random, someone could answer a question using only that chunk's text.
+
+**Why revised:** My original 8/10 was based on reading only 5 chunks, where I mistook the Innisfree laundry doc's title line ("Laundry in Innisfree Hall") for missing context. Sampling 10 more chunks showed every one — including laundry and noise docs — opens with a self-naming title line and reads as complete. Given that pattern holds, I'd expect this corpus to hit 10/10, not 8/10.
+
 
 ---
 

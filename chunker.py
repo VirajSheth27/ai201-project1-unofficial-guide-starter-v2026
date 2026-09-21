@@ -82,22 +82,58 @@ def fallback_split(
 
 def split_documents(documents: list[Document]) -> list[Chunk]:
     """
-    Split documents into chunks. ⚠️ REPLACE THE BODY OF THIS IN MILESTONE 3.
+    Paragraph-aware chunking with a 600-character ceiling.
 
-    Right now it just calls the fallback. That is the plain, generic behaviour
-    the brief is talking about.
+    campus_life documents are short (avg ~317 chars, longest seen ~550) and
+    single-topic, each opening with a self-naming title line separated by a
+    blank line ("Laundry in Innisfree Hall\n\n..."). Confirmed via raw file
+    inspection that paragraphs are separated by "\n\n" throughout the corpus.
 
-    When you write your own strategy, set `produced_by` to
-    "chunker.py::split_documents" so your README's Sample Chunks section names
-    the right function. `app.py chunks` prints that string for you.
+    Splitting on "\n\n" with a 600-char ceiling means nearly every document
+    stays a single chunk — verified this is a deliberate outcome, not an
+    accident: the longest file found is ~550 chars, under the ceiling, so the
+    paragraph-split logic exists as a safety net for any doc that grows past
+    it but doesn't fire on this corpus as it stands today.
 
-    Things worth thinking about before you write any code:
-      - Are your documents short posts or long guides?
-      - Is the useful information in one sentence, or spread over a paragraph?
-      - Would splitting on paragraph breaks keep more thoughts intact than
-        splitting on a character count?
+    No header/filename text is injected into the chunk body — source docs
+    already self-identify via their title line, so metadata alone (the
+    `source` field) is enough for citation.
     """
-    return fallback_split(documents)
+    MAX_CHUNK_CHARS = 600
+
+    chunks: list[Chunk] = []
+    for doc in documents:
+        paragraphs = [p.strip() for p in doc.text.split("\n\n") if p.strip()]
+
+        current = ""
+        index = 0
+        for para in paragraphs:
+            candidate = f"{current}\n\n{para}".strip() if current else para
+            if len(candidate) > MAX_CHUNK_CHARS and current:
+                chunks.append(
+                    Chunk(
+                        text=current,
+                        source=doc.source,
+                        index=index,
+                        produced_by="chunker.py::split_documents",
+                    )
+                )
+                index += 1
+                current = para
+            else:
+                current = candidate
+
+        if current:
+            chunks.append(
+                Chunk(
+                    text=current,
+                    source=doc.source,
+                    index=index,
+                    produced_by="chunker.py::split_documents",
+                )
+            )
+
+    return chunks
 
 
 def describe(chunks: list[Chunk]) -> str:
