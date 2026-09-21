@@ -21,26 +21,17 @@
 
 ## What This Does
 
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
-
-     Milestone 5. -->
+The RAG system built over campus_life—a real-world corpus of 88 student-written posts covering housing, dining halls, course workloads, and administrative edge cases. It answers queries like "Does the campus store price-match textbooks?" or "How is ENGL 205 graded?" by identifying the most relevant document chunks and generating a precise response that explicitly cites its source. If a user asks a question outside the scope of the corpus (like general world trivia or unrelated campus topics), the system uses a vector distance threshold ( cutoff at 0.55 ) to politely refuse to answer rather than fabricate information.
 
 ## Chunking Strategy
 
-**Chunk size:**
-**Overlap:**
+**Chunk size:** No fixed chunk size
 
-<!-- What about YOUR documents made you pick these numbers? Short posts and
-     long sectioned guides don't want the same chunking, and "800 seemed
-     reasonable" earns nothing. Point at something you noticed when you read
-     the documents in Milestone 1.
+**Overlap:** None
 
-     If you changed your mind partway through, say so and say why. That's worth
-     more than pretending you got it right first time.
+The campus_life documents are short (averaging 317 characters, with the longest found at ~550 characters) and single-topic, with each post opening with a self-naming title line (e.g., "Laundry in Innisfree Hall" or "Morrow House — what it's actually like"). I split on paragraph breaks (\n\n) with a 600-character ceiling as a explicit safety net for longer, multi-paragraph documents, rather than relying on a arbitrary default size that happened not to trigger splits.
 
-     Milestone 3. -->
+I confirmed via raw string inspection (repr() on file contents) that paragraphs across both general overview files and specific sub-topic files are consistently separated by \n\n. In practice, this strategy yields one chunk per document across almost all 88 files—a deliberate design choice backed by corpus analysis, since the longest overview document sitting at ~550 characters easily fits under the 600-character ceiling without arbitrary truncation. While I initially considered injecting filename and title headers directly into the chunk text to solve potential context gaps, inspecting raw samples proved that every document already explicitly self-identifies in its first line. Consequently, I kept raw chunk text untouched and rely on the attached metadata payload for downstream citation tracking and source attribution.
 
 ## Sample Chunks
 
@@ -53,29 +44,61 @@
 
      Milestone 3. -->
 
-**Chunk 1** — source: `` — produced by: ``
+**Chunk 1** — source: `admin_add_drop_deadline.txt#0` — produced by: `chunker.py::split_documents`
 
 ```
+On the add/drop deadline
+
+You can add a course through the end of the second week. Dropping is a longer window — through the end of week six — but a drop after week two shows as a W on your transcript. Nothing anywhere on the registrar's site says this plainly, and students find out from each other.
 ```
 
-**Chunk 2** — source: `` — produced by: ``
+**Chunk 2** — source: `course_biol_160.txt#0` — produced by: `chunker.py::split_documents`
 
 ```
+BIOL 160 Cell Biology
+
+I lived here my sophomore year. Format is lecture three times a week with a weekly lab. Assessment: four unit tests and a cumulative final. Not curved.
+
+Expect 9 to 11 hours a week, the heaviest first-year course by reputation.
+
+The one piece of advice: the unit tests come fast, roughly every three weeks; falling behind once is very hard to recover from.
 ```
 
-**Chunk 3** — source: `` — produced by: ``
+**Chunk 3** — source: `course_hist_118_workload.txt#0` — produced by: `chunker.py::split_documents`
 
 ```
+Workload for HIST 118 Modern World History
+
+People keep asking so: a lot of reading, about 120 pages a week, but no problem sets. That's real time, not optimistic time.
+
+It's front-loaded — the first month is heavier than the rest, partly because you're learning the format.
 ```
 
-**Chunk 4** — source: `` — produced by: ``
+**Chunk 4** — source: `dining_pellew_dining_hall_followup.txt#0` — produced by: `chunker.py::split_documents`
 
 ```
+Re: Pellew Dining Hall
+
+Adding to what people have said about Pellew Dining Hall. The wait figure of 12 to 18 minutes at peak matches what I've seen. If you're trying to eat between classes, go before 11:45 and it's a different building entirely.
+
+Also worth saying: the furthest hall from anywhere, next to the athletics centre. Nobody tells you this at orientation.
 ```
 
-**Chunk 5** — source: `` — produced by: ``
+**Chunk 5** — source: `housing_innisfree_hall.txt#0` — produced by: `chunker.py::split_documents`
 
 ```
+Innisfree Hall — what it's actually like
+
+Transferred in last year, so take this with a grain of salt. Built 1991, renovated 2022. Rooms are doubles arranged as pairs sharing one bathroom between two rooms.
+
+The good: the shared-bathroom-between-two-rooms arrangement is the best compromise on campus.
+
+The bad: no air conditioning, which matters for the first three weeks of September.
+
+Laundry costs $1.75 wash, $1.75 dry, app-based. On noise: moderate; the building is L-shaped and the short wing is much quieter.
+
+For each one, ask: could someone answer a question using only this,
+without reading what came before or after?
 ```
 
 ## Sample Answer
@@ -83,14 +106,15 @@
 <!-- One complete question and answer, pasted as text, with the source line
      visible. Milestone 4. -->
 
-**Question:**
+**Question:** Does the campus store price-match textbooks?
 
 **Answer:**
 
 ```
+Yes, the campus store price-matches, though it is not advertised anywhere and you must ask at the counter with the other listing on your phone. This comes from money_textbooks.txt.
 ```
 
-**My relevance cutoff:**
+**My relevance cutoff:** 0.55
 
 <!-- The number you set in config.py, and how you got there.
 
@@ -103,7 +127,10 @@
 
 | Question | In corpus? | Best distance |
 |---|---|---|
-|  |  |  |
+| Does the campus store price-match textbooks?|  Yes | 0.241 |
+| How is ENGL 205 graded? |  Yes | 0.303 |
+| What is the capital of Mongolia?|  No | 0.825 |
+| How do I change the oil in a diesel engine? |  No | 0.934 |
 
 ## How I Used AI
 
@@ -116,9 +143,9 @@
 
      Milestone 5. -->
 
-**1.**
+**1.** I asked Claude whether I should inject filenames into chunk text to fix a context problem I found in one chunk. It initially agreed a fix was needed, but pushed back when I generalized to 'always inject headers' — sampling 10 chunks showed most already self-identify, so I dropped the header idea and kept chunk text untouched.
 
-**2.**
+**2.** After writing criterion 4 (8 of 10 chunks pass a completeness check) based on reading just 5 chunks, I asked Claude to help me verify the reasoning behind it.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
