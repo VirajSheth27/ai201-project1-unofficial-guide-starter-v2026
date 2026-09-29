@@ -1,0 +1,197 @@
+# Run log — before-scorerfix
+
+- Produced by: `run_eval.py::main`
+- Retrieval: `store.py::search`, chunks from `chunker.py::split_documents`
+- Corpus: `campus_life` (index variant `default`)
+- top-k: 3 · relevance cutoff: 0.55
+- Runs per question: 3, caching off
+- When: 2026-09-29 00:44
+
+This table is one row per QUESTION. The run log your README asks for is
+one row per CRITERION, so aggregate these into it — criterion 1 is how many
+of your questions had the answer in the retrieved chunks, and so on.
+
+| Question | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| Does the campus store price-match textbooks? | pass | pass | pass |
+| When do the paths get cleared after snow? | pass | pass | pass |
+| When is the best time to do laundry at Innisfree Hall? | pass | pass | pass |
+| How long is the wait for a first counselling appointment? | pass | pass | pass |
+| How is ENGL 205 Writing for the Sciences graded? | pass | pass | pass |
+
+---
+
+## The relevance gate on out-of-corpus questions
+
+Produced by `run_eval.py::check_out_of_scope`, cutoff 0.55. Refused 5 of 5.
+
+Retrieval is deterministic and the gate is a comparison against a
+fixed number, so these do not vary between runs — one pass over the
+list is the whole measurement.
+
+| Out-of-scope question | Best distance | Gate |
+|---|---|---|
+| What is the capital of Mongolia? | 0.825 | refused |
+| How do I change the oil in a diesel engine? | 0.934 | refused |
+| Who won the 1994 World Cup? | 0.886 | refused |
+| What is the recommended dosage of ibuprofen for a headache? | 0.844 | refused |
+| How do I write a for loop in Rust? | 0.896 | refused |
+
+---
+
+## Real output
+
+This is what the system actually produced. Paste the relevant parts
+into your README underneath the table — the rubric asks for real
+output as text, not a description of it.
+
+### Does the campus store price-match textbooks? — run 1
+
+- Best distance: 0.2412 (passed the gate)
+- Sources retrieved: admin_library_holds.txt, admin_printing_quota.txt, money_textbooks.txt
+
+```
+Yes, the campus store price-matches textbooks, though it is not advertised anywhere and you have to ask at the counter with the other listing on your phone. 
+
+Source: money_textbooks.txt
+```
+
+### Does the campus store price-match textbooks? — run 2
+
+- Best distance: 0.2412 (passed the gate)
+- Sources retrieved: admin_library_holds.txt, admin_printing_quota.txt, money_textbooks.txt
+
+```
+Yes, the campus store price-matches textbooks, though it is not advertised anywhere and you must ask at the counter with the other listing on your phone (money_textbooks.txt).
+```
+
+### Does the campus store price-match textbooks? — run 3
+
+- Best distance: 0.2412 (passed the gate)
+- Sources retrieved: admin_library_holds.txt, admin_printing_quota.txt, money_textbooks.txt
+
+```
+Yes, the campus store price-matches textbooks, but this policy is not advertised anywhere and you must ask at the counter with the other listing on your phone. 
+
+Source: money_textbooks.txt
+```
+
+### When do the paths get cleared after snow? — run 1
+
+- Best distance: 0.4568 (passed the gate)
+- Sources retrieved: housing_calder_annexe_noise.txt, transit_walking.txt, winter_gear.txt
+
+```
+The paths get cleared by 7am on weekdays and considerably later on weekends (winter_gear.txt).
+```
+
+### When do the paths get cleared after snow? — run 2
+
+- Best distance: 0.4568 (passed the gate)
+- Sources retrieved: housing_calder_annexe_noise.txt, transit_walking.txt, winter_gear.txt
+
+```
+The paths get cleared by 7am on weekdays and considerably later on weekends (winter_gear.txt).
+```
+
+### When do the paths get cleared after snow? — run 3
+
+- Best distance: 0.4568 (passed the gate)
+- Sources retrieved: housing_calder_annexe_noise.txt, transit_walking.txt, winter_gear.txt
+
+```
+The paths get cleared by 7am on weekdays and considerably later on weekends (winter_gear.txt).
+```
+
+### When is the best time to do laundry at Innisfree Hall? — run 1
+
+- Best distance: 0.3376 (passed the gate)
+- Sources retrieved: housing_aldridge_hall_laundry.txt, housing_innisfree_hall_laundry.txt, housing_tamsin_court_laundry.txt
+
+```
+The best time to do laundry at Innisfree Hall is Tuesday or Wednesday morning. 
+
+Source: housing_innisfree_hall_laundry.txt
+```
+
+### When is the best time to do laundry at Innisfree Hall? — run 2
+
+- Best distance: 0.3376 (passed the gate)
+- Sources retrieved: housing_aldridge_hall_laundry.txt, housing_innisfree_hall_laundry.txt, housing_tamsin_court_laundry.txt
+
+```
+The best time to do laundry at Innisfree Hall is Tuesday or Wednesday morning. 
+
+Source: housing_innisfree_hall_laundry.txt
+```
+
+### When is the best time to do laundry at Innisfree Hall? — run 3
+
+- Best distance: 0.3376 (passed the gate)
+- Sources retrieved: housing_aldridge_hall_laundry.txt, housing_innisfree_hall_laundry.txt, housing_tamsin_court_laundry.txt
+
+```
+The best time to do laundry at Innisfree Hall is Tuesday or Wednesday morning (housing_innisfree_hall_laundry.txt).
+```
+
+### How long is the wait for a first counselling appointment? — run 1
+
+- Best distance: 0.3594 (passed the gate)
+- Sources retrieved: admin_grade_appeals.txt, advising_registration.txt, health_center.txt
+
+```
+The wait for a first counselling session is usually three or four days (health_center.txt).
+```
+
+### How long is the wait for a first counselling appointment? — run 2
+
+- Best distance: 0.3594 (passed the gate)
+- Sources retrieved: admin_grade_appeals.txt, advising_registration.txt, health_center.txt
+
+```
+The wait for a first counselling session is usually three or four days. 
+
+Source: health_center.txt
+```
+
+### How long is the wait for a first counselling appointment? — run 3
+
+- Best distance: 0.3594 (passed the gate)
+- Sources retrieved: admin_grade_appeals.txt, advising_registration.txt, health_center.txt
+
+```
+The wait for a first counselling session is usually three or four days. 
+
+Source: health_center.txt
+```
+
+### How is ENGL 205 Writing for the Sciences graded? — run 1
+
+- Best distance: 0.3032 (passed the gate)
+- Sources retrieved: course_engl_205.txt, course_engl_205_exams.txt, course_engl_205_workload.txt
+
+```
+ENGL 205 has no exams and is graded based on a portfolio of six revised pieces. The portfolio is graded on revision, meaning you are marked on the distance traveled between drafts (sources: `course_engl_205.txt`, `course_engl_205_exams.txt`).
+```
+
+### How is ENGL 205 Writing for the Sciences graded? — run 2
+
+- Best distance: 0.3032 (passed the gate)
+- Sources retrieved: course_engl_205.txt, course_engl_205_exams.txt, course_engl_205_workload.txt
+
+```
+Based on the documents, ENGL 205 has no exams and is assessed using a portfolio of six revised pieces, which is graded on revision (the distance travelled from your drafts). 
+
+This information comes from **course_engl_205.txt** and **course_engl_205_exams.txt**.
+```
+
+### How is ENGL 205 Writing for the Sciences graded? — run 3
+
+- Best distance: 0.3032 (passed the gate)
+- Sources retrieved: course_engl_205.txt, course_engl_205_exams.txt, course_engl_205_workload.txt
+
+```
+ENGL 205 is graded based on a portfolio of six revised pieces, and there are no exams. The portfolio is graded on revision, meaning you are marked on the distance travelled from your initial drafts. 
+
+This information comes from `course_engl_205.txt` and `course_engl_205_exams.txt`.
+```
