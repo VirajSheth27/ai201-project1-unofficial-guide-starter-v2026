@@ -290,7 +290,13 @@ def build_prompt(question: str, results) -> str:
     being sent — `python app.py ask "..." --show-prompt` prints exactly what
     this returns. Reading it once is the fastest way to see that retrieval,
     not the model, decides what an answer can possibly be based on.
+
+    Unit 2 improvement: chunks past the relevance cutoff are dropped here, so
+    only chunks the gate would accept on their own reach the model.
     """
+    import gate  # local import: gate imports store, keep generate.py light
+
+    results = gate.relevant(results)
     context = "\n\n".join(
         f"[from {r.source}]\n{r.text}" for r in results
     )

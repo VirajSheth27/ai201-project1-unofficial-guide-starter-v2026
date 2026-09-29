@@ -155,127 +155,10 @@ Yes, the campus store price-matches, though it is not advertised anywhere and yo
 ---
 
 # Unit 2
-
-<!-- These sections get ADDED to what's already above. Don't delete or rewrite
-     unit 1 — the point is that someone can see what you said before you knew
-     how it went. -->
-
-## Run Log — Before
-
-<!-- Your five criteria, three runs each. `python run_eval.py --label before`
-     runs the questions, puts the OUT_OF_SCOPE ones through the gate, and
-     writes it all into results/ for you. Targets come from criteria.md; the
-     verdict column is your call.
-
-     Criterion 3 is measured in one deterministic pass rather than three, so
-     the same number goes in all three run columns. That's correct, not lazy.
-
-     Milestone 1. -->
-
-| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
-|---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
-
-<!-- Underneath, paste the REAL output for each criterion from one of your
-     runs — the actual text your system produced, not a description of it.
-     Name the file and function that produced it. -->
-
-## Verdicts
-
-<!-- MET or MISSED for each of the five, against the target you wrote last
-     unit — not a new one. Plus a sentence on how you decided. That sentence
-     matters most where it was close.
-
-     If your target said 4 of 5 and your runs came out 4, 3, 4, that's a MISS.
-     The target has to hold, not show up occasionally.
-
-     Milestone 2. -->
-
-| # | Criterion | Verdict | How I decided |
-|---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
-
-## Diagnoses
-
-<!-- For each miss: which stage caused it, and how. The stage alone isn't
-     enough — you need the mechanism.
-
-     Not a diagnosis: "Question 3 didn't work."
-     A diagnosis:     "Question 3 asks about laundry costs. The answer is in
-                       one sentence that got split across two chunks, so
-                       neither chunk on its own contains it."
-
-     The five stages: loading → chunking → embedding → retrieval → generation.
-
-     Look for a pattern. If three misses all ask about numbers, that's one
-     problem, not three.
-
-     Missed nothing? Say so, then say honestly whether your targets were set
-     low, and which one you'd tighten and to what.
-
-     Milestone 3. -->
-
-## The Improvement
-
-**What I changed:**
-
-**Why I picked it:**
-
-<!-- Connect it to a specific diagnosis above in one sentence. If you can't,
-     you picked a fix because it sounded impressive. -->
-
-### Run Log — After
-
-<!-- Same format, same five criteria, three runs each.
-     `python run_eval.py --label after` -->
-
-| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
-|---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
-
-**Did it help?**
-
-<!-- Say plainly whether it did, and how you know. If it made things worse,
-     say that — a change that backfired, honestly reported, earns full credit
-     and is more interesting than one that worked. What matters is that you can
-     tell.
-
-     Milestone 4. -->
-
-## What's Still Broken
-
-<!-- For each criterion still missed after your fix: what you'd do about it,
-     and why you stopped where you did.
-
-     "I ran out of time" is fine if it's true. Pretending nothing is left is
-     not.
-
-     Milestone 5. -->
-
-## What I'd Do Differently
-
-<!-- Knowing what you know now — which of your five criteria would you write
-     differently, and why?
-
-     Milestone 5. -->
-
-# Unit 2
  
 ## Run Log — Before
  
-Evidence files, all committed in results folder.
+Evidence files, all committed in `results/`:
  
 | Criterion | Produced by | File |
 |---|---|---|
@@ -283,7 +166,7 @@ Evidence files, all committed in results folder.
 | 1 | `check_retrieval.py` (module-level script) → `store.py::search` | `results/retrieval_check_before.txt` |
 | 3 | `run_eval.py::check_out_of_scope`, plus `python app.py ask` for the refusal text | `results/run_2026-09-29_0033_before.md`, `results/refusal_check_before.txt` |
 | 4 | `sample_chunks.py` → `chunker.py::split_documents` | `results/chunk_sample_before.txt` |
-| 5 | `run_hall_eval.py::main` → `run_eval.py::run_once` | `results/hall_eval_2026-09-29_0058_before.md` |
+| 5 | `run_hall_eval.py::main` → `run_eval.py::run_once` | `results/hall_eval_<TIMESTAMP>_before.md` (run started 00:58) |
  
 Settings: corpus `campus_life`, index variant `default`, top-k 3, relevance cutoff 0.55, caching off.
  
@@ -301,8 +184,100 @@ Criteria 1 and 3 have one number repeated across all three columns. Retrieval is
  
 1. **Scorer bug.** The first run (`run_2026-09-29_0033_before.md`) marked the Innisfree laundry question as failing in all three runs. The answer was correct ("Tuesday or Wednesday morning", matching the source doc word for word). `scorer.py::judge` compared `expects.lower()` against the answer without lowercasing the answer, so `"tuesday"` never matched "Tuesday". The other four questions only passed because their expected words happen to be lowercase in the answers. I fixed the scorer, left the original results file untouched as evidence, and re-ran as `before-scorerfix`.
 2. **Rate limit.** The first attempt at the criterion 5 run hit the Gemini free-tier limit (15 requests per minute) partway through run 2 and crashed before writing a file. I added a 5-second delay between calls and re-ran all three runs from scratch. The partial results shown on screen were not counted.
-
-
+### Real output
+ 
+**Criterion 1** — `check_retrieval.py`, retrieval by `store.py::search`, from `results/retrieval_check_before.txt`:
+ 
+```
+=== When is the best time to do laundry at Innisfree Hall?
+    expects 'Tuesday' -> IN A RETRIEVED CHUNK
+    1. housing_innisfree_hall_laundry.txt#0  distance=0.3376
+       Laundry in Innisfree Hall  Machines take $1.75 wash, $1.75 dry, app-based. There are eight washers and six dryers for the building, which is the wrong ratio and means the dryers back up on Sunday evenings.  Best time to do laundry here is Tuesday or Wednesday morning. Sunday after 6pm you will wait.
+    2. housing_tamsin_court_laundry.txt#0  distance=0.4344
+       Laundry in Tamsin Court  Machines take in-unit washer-dryer. There are eight washers and six dryers for the building, which is the wrong ratio and means the dryers back up on Sunday evenings.  Best time to do laundry here is Tuesday or Wednesday morning. Sunday after 6pm you will wait.
+    3. housing_aldridge_hall_laundry.txt#0  distance=0.4444
+       Laundry in Aldridge Hall  Machines take $1.75 wash, $1.50 dry, card only. There are eight washers and six dryers for the building, which is the wrong ratio and means the dryers back up on Sunday evenings.  Best time to do laundry here is Tuesday or Wednesday morning. Sunday after 6pm you will wait.
+```
+ 
+For all five questions, the expected answer was in the **top-ranked** chunk, not just somewhere in the top three.
+ 
+**Criterion 2** — `generate.py::answer_from_chunks` via `run_eval.py::run_once`, run 1 of each question, from `results/run_2026-09-29_0033_before.md`:
+ 
+```
+Q: Does the campus store price-match textbooks?
+Yes, the campus store price-matches textbooks, though it is not advertised and you have to ask at the counter with the other listing on your phone. 
+ 
+Source: money_textbooks.txt
+```
+ 
+```
+Q: When do the paths get cleared after snow?
+The paths get cleared by 7am on weekdays and considerably later on weekends (winter_gear.txt).
+```
+ 
+```
+Q: When is the best time to do laundry at Innisfree Hall?
+The best time to do laundry at Innisfree Hall is Tuesday or Wednesday morning. 
+ 
+Source: housing_innisfree_hall_laundry.txt
+```
+ 
+```
+Q: How long is the wait for a first counselling appointment?
+The wait for a first counselling session is usually three or four days (health_center.txt).
+```
+ 
+```
+Q: How is ENGL 205 Writing for the Sciences graded?
+ENGL 205 has no exams and is assessed using a portfolio of six revised pieces that is not curved. The portfolio is graded on revision, meaning students are marked on the distance traveled and must keep their drafts (Source: `course_engl_205.txt`, `course_engl_205_exams.txt`).
+```
+ 
+**Criterion 3** — `run_eval.py::check_out_of_scope`, from `results/run_2026-09-29_0033_before.md`:
+ 
+| Out-of-scope question | Best distance | Gate |
+|---|---|---|
+| What is the capital of Mongolia? | 0.825 | refused |
+| How do I change the oil in a diesel engine? | 0.934 | refused |
+| Who won the 1994 World Cup? | 0.886 | refused |
+| What is the recommended dosage of ibuprofen for a headache? | 0.844 | refused |
+| How do I write a for loop in Rust? | 0.896 | refused |
+ 
+And the refusal the user actually sees, from `python app.py ask` (`results/refusal_check_before.txt`):
+ 
+```
+  (best distance 0.825, cutoff 0.55)
+ 
+I don't have enough information about that.
+ 
+0 model calls this session
+```
+ 
+**Criterion 4** — `sample_chunks.py`, chunks from `chunker.py::split_documents`, from `results/chunk_sample_before.txt`. This is the closest call of the 30:
+ 
+```
+--- 1.7  dining_verrill_street_grill_followup.txt#0
+Re: Verrill Street Grill
+ 
+Adding to what people have said about Verrill Street Grill. The wait figure of up to 30 minutes on Friday evenings matches what I've seen. If you're trying to eat between classes, go before 11:45 and it's a different building entirely.
+ 
+Also worth saying: one register, so the queue is a single line no matter how busy. Nobody tells you this at orientation.
+Standalone?  [x] yes  [ ] no   Reason: BORDERLINE. It's a reply ("Adding to what people have said"), so it points at an earlier post. It still passes because it restates the facts it refers to (up to 30 minutes on Friday evenings, go before 11:45, single register) and names the place, so "How long is the wait at Verrill Street Grill on Fridays?" is answerable from this chunk alone.
+```
+ 
+**Criterion 5** — `run_hall_eval.py::main`, answers via `run_eval.py::run_once`, from `results/hall_eval_<TIMESTAMP>_before.md` (run started 00:58). This is the question where two chunks nearly tied:
+ 
+```
+### How much does a dryer cost in Morrow House? — run 1
+ 
+- Retrieved: housing_morrow_house.txt#0 (0.322), housing_morrow_house_laundry.txt#0 (0.323), housing_old_brewhouse_laundry.txt#0 (0.490)
+ 
+A dryer in Morrow House costs $1.25. 
+ 
+Source: housing_morrow_house.txt (also mentioned in housing_morrow_house_laundry.txt)
+```
+ 
+A try passed only if the answer stated that hall's fact **and** cited that hall's doc **and** cited no other hall's doc. This rule was committed in `run_hall_eval.py` before the run. The ten questions were chosen so each correct answer differs between halls (for example Morrow's $1.25 dryer), because the original laundry test question couldn't detect a wrong-hall answer: the "best time" sentence is identical in every hall's laundry doc.
+ 
 ## Verdicts
  
 | # | Criterion | Verdict | How I decided |
@@ -317,7 +292,7 @@ No criteria were revised in this unit. All five could be measured and were. Crit
  
 ## Diagnoses
  
-**I missed nothing.** All five criteria were met on all three runs, so there is no pipeline failure to trace. 
+**I missed nothing.** All five criteria were met on all three runs, so there is no pipeline failure to trace. The one failure my test reported (the laundry question) traced back to the test itself, not the pipeline. Working backwards: the answer was in the top-ranked chunk (so loading, chunking, embedding and retrieval were fine), and the generated answer matched that chunk word for word (so generation was fine). That left the scorer, which was comparing case-sensitively.
  
 **Were my targets set low? Honestly, mostly yes.**
  
@@ -326,7 +301,6 @@ No criteria were revised in this unit. All five could be measured and were. Crit
 - **Criterion 5 named the hall in every question**, which gives retrieval an easy anchor. **I'd tighten it to:** 8 of 10 on questions that don't name the hall up front, such as "Which residence hall has $1.25 dryers?", where near-identical laundry docs would actually compete.
 - **Criterion 2 only checks that a source is named, not that it's the right one.** A stricter version would require the cited file to be one that actually contains the stated fact.
 - **Criterion 1 at 4 of 5 left room for a miss the system never needed.** Every answer came from the top-ranked chunk, so 5 of 5 at rank 1 would have been a fairer target.
-
 **Weaknesses my tests surfaced that no criterion captured:**
  
 - **Retrieval/gate stage — irrelevant chunks reach the model.** The gate checks only the best distance, and `run_eval.py::run_once` passes all top-k results to `generate.py::answer_from_chunks`. So once the best chunk passes, every retrieved chunk goes to the model, however far away it is. Across my five test questions, **4 of the 15 chunks sent to the model were past the 0.55 cutoff**: `admin_library_holds.txt` (0.652) for the price-match question, `transit_walking.txt` (0.705) and `housing_calder_annexe_noise.txt` (0.782) for the snow question, and `admin_grade_appeals.txt` (0.583) for the counselling question. None caused a wrong answer this time, but the model is being handed text the gate itself would call irrelevant.
@@ -334,25 +308,114 @@ No criteria were revised in this unit. All five could be measured and were. Crit
 - **Generation stage — small invented links.** One Old Brewhouse answer (run 3) said you pay with coins "as the machines take $1.50", connecting two facts the source never connects.
 ## The Improvement
  
+**What I changed:** I added `gate.py::relevant`, which keeps only the chunks whose own distance is under the 0.55 cutoff, and called it at the top of `generate.py::build_prompt`. Before the change, the gate only checked the *best* chunk, and every top-k result went into the prompt once that one chunk passed. Now each chunk has to pass the same cutoff on its own. This was the only system change in this unit (commit: "Improvement: drop chunks past the relevance cutoff before generation").
  
-**What I changed:** _To fill in after the change._ Planned: filter retrieved chunks individually against the 0.55 cutoff before generation, so only chunks the gate would accept reach the model.
+**Why I picked it:** My diagnosis found that 4 of the 15 chunks sent to the model were past my own relevance cutoff, because `gate.check` looks only at the best distance. Filtering each chunk against the same cutoff targets exactly that mechanism. I didn't pick hybrid search, because no test failed in a way keyword matching would fix.
  
-**Why I picked it:** My diagnosis found that 4 of the 15 chunks sent to the model were past my own relevance cutoff, because the gate checks only the best distance. Filtering chunks individually targets exactly that mechanism. I didn't pick hybrid search, because no test failed in a way keyword matching would fix.
+**The risk I expected:** the 0.55 cutoff was calibrated to decide whether a *question* is answerable, not whether a *supporting chunk* is useful, so the filter could drop a chunk that held part of an answer. I checked for this specifically.
  
-**How I'll measure it:** the number of past-cutoff chunks sent to the model across the five test questions (4 of 15 before), plus all five criteria re-run with three runs each, to check the change didn't break anything.
+**How I measured it:** `check_context.py` replaces the API call with a function that captures the prompt, then runs `generate.py::answer_from_chunks` for every question and counts which chunks actually appear in the prompt. It makes zero model calls and measures the real prompt, not a reconstruction of it, so the same script works before and after the change. I also re-ran all five criteria, three runs each.
  
-### Run Log — After
+### Context check — before and after
  
-<!-- TODO: fill in from the after runs. -->
- 
-| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
-|---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. Sampled chunks stand alone (revised target) | 10 of 10 |  |  |  |  |
-| 5. Hall questions attributed to the right hall | 8 of 10 |  |  |  |  |
+Produced by `check_context.py`, from `results/context_check_before.txt` and `results/context_check_after.txt`:
  
 | Measure | Before | After |
 |---|---|---|
-| Past-cutoff chunks sent to the model (5 test questions) | 4 of 15 |  |
+| Past-cutoff chunks sent to the model (5 test questions) | 4 of 15 | 0 of 11 |
+| Past-cutoff chunks sent to the model (10 hall questions) | 0 of 30 | 0 of 30 |
+| Questions where the answer chunk still reached the model | 5 of 5 | 5 of 5 |
+ 
+The four chunks removed were exactly the four my diagnosis named:
+ 
+```
+BEFORE
+=== Does the campus store price-match textbooks?
+    sent: money_textbooks.txt  distance=0.2412
+    sent: admin_printing_quota.txt  distance=0.5148
+    sent: admin_library_holds.txt  distance=0.6519  <-- PAST CUTOFF
+ 
+=== When do the paths get cleared after snow?
+    sent: winter_gear.txt  distance=0.4568
+    sent: transit_walking.txt  distance=0.7050  <-- PAST CUTOFF
+    sent: housing_calder_annexe_noise.txt  distance=0.7815  <-- PAST CUTOFF
+ 
+=== How long is the wait for a first counselling appointment?
+    sent: health_center.txt  distance=0.3594
+    sent: advising_registration.txt  distance=0.5380
+    sent: admin_grade_appeals.txt  distance=0.5832  <-- PAST CUTOFF
+ 
+Test questions (questions.py): 4 of 15 chunks sent to the model were past the 0.55 cutoff
+```
+ 
+```
+AFTER
+=== Does the campus store price-match textbooks?
+    sent: money_textbooks.txt  distance=0.2412
+    sent: admin_printing_quota.txt  distance=0.5148
+ 
+=== When do the paths get cleared after snow?
+    sent: winter_gear.txt  distance=0.4568
+ 
+=== How long is the wait for a first counselling appointment?
+    sent: health_center.txt  distance=0.3594
+    sent: advising_registration.txt  distance=0.5380
+ 
+Test questions (questions.py): 0 of 11 chunks sent to the model were past the 0.55 cutoff
+```
+ 
+### Run Log — After
+ 
+Evidence files, all committed in `results/`: `run_2026-09-29_0146_after.md` (criteria 2 and 3), `retrieval_check_after.txt` (criterion 1), `refusal_check_after.txt` (criterion 3), `chunk_sample_after.txt` (criterion 4), and `hall_eval_<TIMESTAMP>_after.md` (criterion 5, run started 01:47). Same settings as before: top-k 3, cutoff 0.55, caching off.
+ 
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Sampled chunks stand alone (revised target) | 10 of 10 | 10/10 | 10/10 | 10/10 | MET |
+| 5. Hall questions attributed to the right hall | 8 of 10 | 10/10 | 10/10 | 10/10 | MET |
+ 
+`retrieval_check_after.txt` and `chunk_sample_after.txt` are identical to their before versions, which is expected, because the change doesn't touch retrieval or chunking. The criterion 5 re-run used the stricter checker with Fenwick Court added to the hall list; no answer cited Fenwick.
+ 
+**Reading the after file correctly:** the "Sources retrieved" line in `run_2026-09-29_0146_after.md` still lists three sources for every question, including the past-cutoff ones. That's because `run_eval.py` logs what `store.py::search` *retrieved*, and the filter runs afterwards, inside `build_prompt`. What was actually *sent* to the model is in `context_check_after.txt`.
+ 
+Real output after the change, `generate.py::answer_from_chunks` via `run_eval.py::run_once`, run 1. These are the two questions that lost chunks to the filter:
+ 
+```
+Q: When do the paths get cleared after snow?   (context: winter_gear.txt only; 2 chunks removed)
+The paths get cleared by 7am on weekdays and considerably later on weekends (winter_gear.txt).
+```
+ 
+```
+Q: How long is the wait for a first counselling appointment?   (context: 2 chunks; 1 removed)
+The wait for a first counselling session is usually three or four days (health_center.txt).
+```
+ 
+**Did it help?** It did what it was built to do, and nothing more. Past-cutoff chunks reaching the model went from 4 of 15 to 0 of 11, and the answer chunk survived the filter for every question, so the risk I expected didn't happen. But no criterion changed, because all five were already met, and the answers didn't measurably improve either: the snow and counselling answers are word for word the same as before the change. The irrelevant chunks were never causing wrong answers, so removing them made the context cleaner without making the output better. I know this because I compared the before and after answers for the three questions that lost chunks, and the stated facts and citations are unchanged.
+ 
+Two limits showed up in the after measurement:
+ 
+- **The cutoff isn't a clean relevance line.** Two clearly irrelevant chunks still get through because they sit just under 0.55: `admin_printing_quota.txt` (0.515) for the price-match question and `advising_registration.txt` (0.538) for the counselling question.
+- **It does nothing for the wrong-hall risk.** The hall questions had 0 of 30 past-cutoff chunks both before and after, so the filter never touched them, yet those prompts still include other halls' laundry docs well under the cutoff: Innisfree's laundry doc at 0.389 for a Morrow House question, and Fenwick Court's at 0.404 for an Old Brewhouse question. Near-duplicate docs about a different building sit *close* in embedding space, so a distance filter can't separate them.
+## What's Still Broken
+ 
+No criterion is missed after the fix, but these problems remain:
+ 
+- **Wrong-hall chunks still reach the model (retrieval stage).** 
+- **The gate has never been tested on near-domain questions.** 
+- **Irrelevant chunks just under the cutoff still get through** 
+- **The model repeats contradictions in the source (generation stage).** 
+- **Occasional invented connections between facts.** 
+## What I'd Do Differently
+ 
+Knowing what I know now, I'd rewrite three of my five criteria for the next unit:
+ 
+- **Criterion 3:** I'd use near-domain out-of-scope questions. Questions from a completely different world only prove the gate can reject what obviously doesn't belong; they say nothing about the borderline cases a real student would actually ask.
+- **Criterion 5:** I'd write the test questions before trusting the one existing laundry question. The "best time" sentence is identical across every hall's laundry doc, so that question could never catch a wrong-hall answer. I'd also include questions that don't name the hall, such as "Which residence hall has $1.25 dryers?", where the near-duplicate docs would really compete. And I'd add a criterion on what reaches the model, not just what comes out of it, since that's where the wrong-hall risk actually lives.
+- **Criterion 4:** I'd write a criterion that actually tests the chunker, for example on the few longest documents, rather than one that passes automatically because every document is already a single chunk.
+I'd also test the scorer on a known-correct answer before trusting it. A case-sensitivity bug cost me a false failure on my very first run, and I only caught it by reading the answer instead of the verdict.
+
+## How I Used AI
+
+I used AI to help me draft the README as well as go about helping write code. The thinking and how to do it was all done by me only the code and the readme generation was done with the help of AI.

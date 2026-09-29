@@ -56,3 +56,11 @@ def check(results: list[Result], threshold: float | None = None) -> GateDecision
 
     best = min(r.distance for r in results)
     return GateDecision(passed=best < threshold, best_distance=best, threshold=threshold)
+
+def relevant(results: list[Result], threshold: float | None = None) -> list[Result]:
+    """
+    Keep only the chunks that are individually under the cutoff.
+
+    """
+    threshold = config.THRESHOLD if threshold is None else threshold
+    return [r for r in results if r.distance < threshold]
