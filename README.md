@@ -270,3 +270,89 @@ Yes, the campus store price-matches, though it is not advertised anywhere and yo
      differently, and why?
 
      Milestone 5. -->
+
+# Unit 2
+ 
+## Run Log — Before
+ 
+Evidence files, all committed in results folder.
+ 
+| Criterion | Produced by | File |
+|---|---|---|
+| 2 (and raw answers) | `run_eval.py::main` → `run_eval.py::run_once` → `generate.py::answer_from_chunks` | `results/run_2026-09-29_0033_before.md` (original, buggy scorer) and `results/run_<TIMESTAMP>_before-scorerfix.md` (re-run, fixed scorer) |
+| 1 | `check_retrieval.py` (module-level script) → `store.py::search` | `results/retrieval_check_before.txt` |
+| 3 | `run_eval.py::check_out_of_scope`, plus `python app.py ask` for the refusal text | `results/run_2026-09-29_0033_before.md`, `results/refusal_check_before.txt` |
+| 4 | `sample_chunks.py` → `chunker.py::split_documents` | `results/chunk_sample_before.txt` |
+| 5 | `run_hall_eval.py::main` → `run_eval.py::run_once` | `results/hall_eval_2026-09-29_0058_before.md` |
+ 
+Settings: corpus `campus_life`, index variant `default`, top-k 3, relevance cutoff 0.55, caching off.
+ 
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Sampled chunks stand alone (revised target) | 10 of 10 | 10/10 | 10/10 | 10/10 | MET |
+| 5. Hall questions attributed to the right hall | 8 of 10 | 10/10 | 10/10 | 10/10 | MET |
+ 
+Criteria 1 and 3 have one number repeated across all three columns. Retrieval is deterministic (every question got identical distances in all three runs) and the gate is a comparison against a fixed number, so there is one measurement. Criteria 2 and 5 depend on generated answers and were genuinely re-generated each run: the answer wording differs between runs (for example "three or four days (health_center.txt)" vs "three or four days. Source: health_center.txt"), which confirms caching was off. Criterion 4 is three independent seeded random draws of 10 chunks (seeds 1, 2, 3).
+ 
+**Two things that went wrong during testing, both in the test harness rather than the system:**
+ 
+1. **Scorer bug.** The first run (`run_2026-09-29_0033_before.md`) marked the Innisfree laundry question as failing in all three runs. The answer was correct ("Tuesday or Wednesday morning", matching the source doc word for word). `scorer.py::judge` compared `expects.lower()` against the answer without lowercasing the answer, so `"tuesday"` never matched "Tuesday". The other four questions only passed because their expected words happen to be lowercase in the answers. I fixed the scorer, left the original results file untouched as evidence, and re-ran as `before-scorerfix`.
+2. **Rate limit.** The first attempt at the criterion 5 run hit the Gemini free-tier limit (15 requests per minute) partway through run 2 and crashed before writing a file. I added a 5-second delay between calls and re-ran all three runs from scratch. The partial results shown on screen were not counted.
+
+
+## Verdicts
+ 
+| # | Criterion | Verdict | How I decided |
+|---|---|---|---|
+| 1 | Retrieved chunk contains the answer | MET | The target was 4 of 5 and all three runs scored 5/5. The expected answer was in the top-ranked chunk for every question, which I confirmed by reading the chunk text, not just trusting the keyword match. |
+| 2 | Every answer names a source | MET | The target was 5 of 5 and all 15 generated answers named at least one `.txt` file. The citation format varied (parentheses, "Source:", backticks, italics), and I counted any explicit filename. Refusals aren't counted, since the gate returns them before an answer is generated. |
+| 3 | Gate stops out-of-corpus questions | MET | The target was 4 of 5 and all 5 were refused, with the exact refusal message and zero model calls. It wasn't close: the nearest out-of-scope question (0.825) sat 0.275 past the 0.55 cutoff. |
+| 4 | Sampled chunks stand alone | MET | The revised target was 10 of 10 per draw and all three seeded draws scored 10/10, judged against a rule written before marking. The closest calls were the two "Re:" follow-up posts, which I passed because they restate every fact they refer to and name the place. |
+| 5 | Hall questions attributed to the right hall | MET | The target was 8 of 10 and all three runs scored 10/10. Fenwick Court was missing from the checker's hall list during this run, but I read all 30 answers and none cited it, so no result changes. |
+ 
+No criteria were revised in this unit. All five could be measured and were. Criterion 3 turned out to be too easy, but a target that is too easy isn't a broken measurement, so it stays as written and is discussed below and under What I'd Do Differently. (Criterion 4's revision from 8/10 to 10/10 was made in unit 1, before any results existed, and is recorded in `criteria.md`.)
+ 
+## Diagnoses
+ 
+**I missed nothing.** All five criteria were met on all three runs, so there is no pipeline failure to trace. 
+ 
+**Were my targets set low? Honestly, mostly yes.**
+ 
+- **Criterion 3 is the weakest.** My out-of-scope questions (Mongolia, diesel engines, the World Cup) come from a different world entirely, so they landed at 0.825–0.934, nowhere near the 0.55 cutoff. A real user of a campus guide asks campus questions the corpus doesn't cover, and those would sit much closer to the cutoff. **I'd tighten it to:** "At least 4 of 5 near-domain questions the corpus doesn't cover (for example gym hours, parking permits, the campus Wi-Fi password) are refused." That tests the gate where it could actually fail.
+- **Criterion 4 was nearly unmissable.** My chunker never splits anything (88 documents become 88 chunks), and every document opens with a self-naming title line. So this criterion measured how well the corpus is written, not how well my chunker works.
+- **Criterion 5 named the hall in every question**, which gives retrieval an easy anchor. **I'd tighten it to:** 8 of 10 on questions that don't name the hall up front, such as "Which residence hall has $1.25 dryers?", where near-identical laundry docs would actually compete.
+- **Criterion 2 only checks that a source is named, not that it's the right one.** A stricter version would require the cited file to be one that actually contains the stated fact.
+- **Criterion 1 at 4 of 5 left room for a miss the system never needed.** Every answer came from the top-ranked chunk, so 5 of 5 at rank 1 would have been a fairer target.
+
+**Weaknesses my tests surfaced that no criterion captured:**
+ 
+- **Retrieval/gate stage — irrelevant chunks reach the model.** The gate checks only the best distance, and `run_eval.py::run_once` passes all top-k results to `generate.py::answer_from_chunks`. So once the best chunk passes, every retrieved chunk goes to the model, however far away it is. Across my five test questions, **4 of the 15 chunks sent to the model were past the 0.55 cutoff**: `admin_library_holds.txt` (0.652) for the price-match question, `transit_walking.txt` (0.705) and `housing_calder_annexe_noise.txt` (0.782) for the snow question, and `admin_grade_appeals.txt` (0.583) for the counselling question. None caused a wrong answer this time, but the model is being handed text the gate itself would call irrelevant.
+- **Generation stage — contradictions copied without comment.** `housing_tamsin_court_laundry.txt` says both "in-unit washer-dryer" and "eight washers and six dryers for the building". All three Tamsin answers repeated both claims without flagging that the source contradicts itself.
+- **Generation stage — small invented links.** One Old Brewhouse answer (run 3) said you pay with coins "as the machines take $1.50", connecting two facts the source never connects.
+## The Improvement
+ 
+ 
+**What I changed:** _To fill in after the change._ Planned: filter retrieved chunks individually against the 0.55 cutoff before generation, so only chunks the gate would accept reach the model.
+ 
+**Why I picked it:** My diagnosis found that 4 of the 15 chunks sent to the model were past my own relevance cutoff, because the gate checks only the best distance. Filtering chunks individually targets exactly that mechanism. I didn't pick hybrid search, because no test failed in a way keyword matching would fix.
+ 
+**How I'll measure it:** the number of past-cutoff chunks sent to the model across the five test questions (4 of 15 before), plus all five criteria re-run with three runs each, to check the change didn't break anything.
+ 
+### Run Log — After
+ 
+<!-- TODO: fill in from the after runs. -->
+ 
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
+| 2. Every answer names a source | 5 of 5 |  |  |  |  |
+| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
+| 4. Sampled chunks stand alone (revised target) | 10 of 10 |  |  |  |  |
+| 5. Hall questions attributed to the right hall | 8 of 10 |  |  |  |  |
+ 
+| Measure | Before | After |
+|---|---|---|
+| Past-cutoff chunks sent to the model (5 test questions) | 4 of 15 |  |
